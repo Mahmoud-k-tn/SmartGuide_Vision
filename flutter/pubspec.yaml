@@ -1,0 +1,29 @@
+name: smartguide
+description: SmartGuide Vision -- wearable navigation assistant for visually impaired users.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  geolocator: ^11.0.0
+  web_socket_channel: ^2.4.0
+  flutter_tts: ^4.0.2
+  vibration: ^2.0.0
+  latlong2: ^0.9.0
+  http: ^1.2.0
+  mapbox_maps_flutter: ^2.22.0
+  flutter_compass: ^0.8.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  assets:
+    - assets/circuit.geojson
+    - assets/landmarks.geojson
