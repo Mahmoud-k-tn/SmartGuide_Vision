@@ -37,6 +37,28 @@
 /build/
 **/build/
 .metadata
+**/.symlinks/
+**/ios/Pods/
+**/macos/Pods/
+**/.fvm/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+**/windows/flutter/ephemeral/
+**/windows/flutter/generated_plugin_registrant.*
+**/windows/flutter/generated_plugins.cmake
+**/linux/flutter/ephemeral/
+**/linux/flutter/generated_plugin_registrant.*
+**/linux/flutter/generated_plugins.cmake
 
 # Android/Local configuration
 local.properties
@@ -65,10 +87,10 @@ app.*.map.json
 /android/app/release
 
 # Python
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.env/
-env/
-.venv/
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/venv/
+**/.env/
+**/env/
+**/.venv/
