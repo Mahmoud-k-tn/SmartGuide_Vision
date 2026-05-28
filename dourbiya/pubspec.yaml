@@ -1,0 +1,42 @@
+name: dourbiya
+description: "Dourbiya offline accessibility demo for EPT campus and dormitory"
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mapbox_maps_flutter: ^2.22.0
+  geolocator: ^12.0.0
+  flutter_compass: ^0.8.0
+  vibration: ^2.0.0
+  latlong2: ^0.9.0
+  sqflite: ^2.4.1
+  path: ^1.9.0
+  flutter_tts: ^4.2.2
+  vosk_flutter: ^0.3.48
+  web_socket_channel: ^3.0.1
+  permission_handler: ^12.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+dependency_overrides:
+  permission_handler: ^12.0.1
+  permission_handler_android: ^13.0.1
+  permission_handler_apple: ^9.4.7
+  permission_handler_windows: ^0.2.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/models/vosk-model-small-en-us-0.15.zip
+    - assets/circuit.geojson
+    - assets/landmarks.geojson
+    - assets/images/ept_logo.gif
