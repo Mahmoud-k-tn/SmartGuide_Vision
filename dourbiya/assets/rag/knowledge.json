@@ -1,0 +1,229 @@
+[
+  {
+    "id": "ept_founding",
+    "topic": "ept",
+    "tags": ["history", "founded", "founding", "histoire", "creation", "fondation", "annee", "year", "school", "ecole", "ept"],
+    "text_en": "The Tunisian Polytechnic School, known as EPT, was founded on June 26, 1991.",
+    "text_fr": "L'Ecole Polytechnique de Tunisie, connue sous le nom d'EPT, a ete fondee le 26 juin 1991."
+  },
+  {
+    "id": "ept_status",
+    "topic": "ept",
+    "tags": ["status", "ranking", "best", "top", "meilleure", "ecole", "school", "engineering", "ingenieur", "ept"],
+    "text_en": "EPT is considered the top engineering school in Tunisia and recruits the highest ranked students from the national preparatory class entrance exam.",
+    "text_fr": "L'EPT est consideree comme la meilleure ecole d'ingenieurs de Tunisie et recrute les mieux classes du concours national des classes preparatoires."
+  },
+  {
+    "id": "ept_university",
+    "topic": "ept",
+    "tags": ["university", "carthage", "tutelle", "universite", "ept", "school", "ecole"],
+    "text_en": "EPT is part of the University of Carthage.",
+    "text_fr": "L'EPT est rattachee a l'Universite de Carthage."
+  },
+  {
+    "id": "ept_location",
+    "topic": "ept",
+    "tags": ["location", "address", "marsa", "tunis", "adresse", "ou", "where", "ecole", "school"],
+    "text_en": "The school is located in La Marsa, a coastal suburb of Tunis, at Rue El Khawarezmi, BP 743, La Marsa 2078.",
+    "text_fr": "L'ecole se situe a La Marsa, une banlieue cotiere de Tunis, rue El Khawarezmi, BP 743, La Marsa 2078."
+  },
+  {
+    "id": "ept_curriculum_structure",
+    "topic": "ept",
+    "tags": ["curriculum", "cursus", "semester", "semestre", "tronc commun", "common", "options", "years", "ans", "duration"],
+    "text_en": "The curriculum lasts three years and is split into three semesters of common core and three semesters of specialization.",
+    "text_fr": "Le cursus dure trois ans et se compose de trois semestres de tronc commun puis trois semestres de specialisation."
+  },
+  {
+    "id": "ept_options",
+    "topic": "ept",
+    "tags": ["options", "specialization", "sisy", "sysco", "eges", "filiere", "track", "branche"],
+    "text_en": "After the common core, students choose one of three specialization tracks: SISY, SYSCO, or EGES. Regardless of the choice, every graduate is trained as a versatile polyvalent engineer.",
+    "text_fr": "Apres le tronc commun, les eleves choisissent l'une des trois options : SISY, SYSCO ou EGES. Quel que soit le choix, chaque diplome est forme comme un ingenieur polyvalent."
+  },
+  {
+    "id": "ept_admission",
+    "topic": "ept",
+    "tags": ["admission", "concours", "prepa", "entrance", "entry", "comment", "how", "rejoindre", "join"],
+    "text_en": "Students enter EPT by passing the national engineering schools entrance examination, after two years of preparatory classes, with one of the highest rankings.",
+    "text_fr": "Les etudiants integrent l'EPT en passant le concours national d'entree aux ecoles d'ingenieurs, apres deux annees de classes preparatoires, avec un excellent rang."
+  },
+  {
+    "id": "ept_diploma",
+    "topic": "ept",
+    "tags": ["diploma", "diplome", "engineer", "ingenieur", "polyvalent", "title", "titre"],
+    "text_en": "Graduates receive the diploma of polyvalent engineer.",
+    "text_fr": "Les diplomes recoivent le titre d'ingenieur polyvalent."
+  },
+  {
+    "id": "ept_class_size",
+    "topic": "ept",
+    "tags": ["students", "effectifs", "etudiants", "promotion", "small", "petit", "nombre", "size", "number", "many", "combien", "count", "fifty", "cinquante", "50", "per", "year", "annee", "par"],
+    "text_en": "Each promotion is intentionally kept small with about fifty students per year, which allows personalised teaching.",
+    "text_fr": "Chaque promotion est volontairement reduite a environ cinquante etudiants par an, ce qui permet un enseignement personnalise."
+  },
+  {
+    "id": "ept_model",
+    "topic": "ept",
+    "tags": ["model", "modele", "french", "grandes ecoles", "polytechnique", "paris", "tradition"],
+    "text_en": "EPT is modeled after the French grandes ecoles tradition, with an emphasis on scientific rigor and leadership training.",
+    "text_fr": "L'EPT s'inspire du modele des grandes ecoles francaises, avec une exigence sur la rigueur scientifique et la formation au leadership."
+  },
+  {
+    "id": "ept_director",
+    "topic": "ept",
+    "tags": ["director", "directeur", "head", "chef", "manef", "abderabba", "qui", "who", "dirige", "leads"],
+    "text_en": "The current director of EPT is Mister Manef Abderabba.",
+    "text_fr": "Le directeur actuel de l'EPT est Monsieur Manef Abderabba."
+  },
+  {
+    "id": "ept_professors_count",
+    "topic": "ept",
+    "tags": ["professors", "professeurs", "profs", "teachers", "enseignants", "many", "combien", "count", "nombre", "number", "contract", "contractuel", "permanent", "varies", "variable"],
+    "text_en": "The number of professors at EPT varies each year because the school relies on permanent staff as well as contract teachers.",
+    "text_fr": "Le nombre de professeurs a l'EPT varie chaque annee car l'ecole s'appuie sur du personnel permanent et sur des enseignants contractuels."
+  },
+  {
+    "id": "ept_dept_head_math",
+    "topic": "ept",
+    "tags": ["head", "chef", "department", "departement", "math", "mathematics", "mathematiques", "computer", "science", "informatique", "karoui", "fathi", "who", "qui", "leads"],
+    "text_en": "Mister Fathi Karoui is the head of the Department of Mathematics and Computer Science at EPT.",
+    "text_fr": "Monsieur Fathi Karoui est le chef du departement de Mathematiques et Informatique de l'EPT."
+  },
+  {
+    "id": "ept_dept_head_sisy",
+    "topic": "ept",
+    "tags": ["head", "chef", "department", "departement", "sisy", "dhouha", "bouchaala", "who", "qui", "leads"],
+    "text_en": "Madam Dhouha Bouchaala is the head of the SISY department.",
+    "text_fr": "Madame Dhouha Bouchaala est la cheffe du departement SISY."
+  },
+  {
+    "id": "ept_dept_head_sysco",
+    "topic": "ept",
+    "tags": ["head", "chef", "department", "departement", "sysco", "complex", "complexe", "complexes", "systemes", "manel", "zouari", "who", "qui", "leads"],
+    "text_en": "Madam Manel Zouari is the head of the SYSCO department, which covers complex systems.",
+    "text_fr": "Madame Manel Zouari est la cheffe du departement SYSCO, qui couvre les systemes complexes."
+  },
+  {
+    "id": "ept_dept_head_eges",
+    "topic": "ept",
+    "tags": ["head", "chef", "department", "departement", "eges", "fathi", "belhajkacem", "belhaj", "kacem", "who", "qui", "leads", "engineering", "management"],
+    "text_en": "Mister Fathi Belhajkacem is the head of the EGES department.",
+    "text_fr": "Monsieur Fathi Belhajkacem est le chef du departement EGES."
+  },
+  {
+    "id": "ept_student_life_overview",
+    "topic": "ept",
+    "tags": ["student", "life", "campus", "vie", "etudiante", "etudiant", "activites", "activities", "epanouissement", "creativity", "creativite", "team", "equipe"],
+    "text_en": "Student life at EPT is rich and active, focused on personal growth, creativity, and team spirit through cultural, sporting, and academic activities.",
+    "text_fr": "La vie etudiante a l'EPT est riche et active, centree sur l'epanouissement personnel, la creativite et l'esprit d'equipe a travers des activites culturelles, sportives et academiques."
+  },
+  {
+    "id": "ept_clubs",
+    "topic": "ept",
+    "tags": ["clubs", "associations", "acm", "robot", "data", "art", "fintech", "nateg", "enactus", "association", "club", "vie associative"],
+    "text_en": "EPT hosts a wide range of student clubs: ACM C'EPT for programming, Robot C'EPT for robotics, Data C'EPT for data science, the Art Club, EPT Fintech, NATEG, and Enactus for social entrepreneurship.",
+    "text_fr": "L'EPT abrite de nombreux clubs etudiants : ACM C'EPT pour la programmation, Robot C'EPT pour la robotique, Data C'EPT pour la science des donnees, le Art Club, EPT Fintech, NATEG, et Enactus pour l'entrepreneuriat social."
+  },
+  {
+    "id": "ept_infrastructure_sports",
+    "topic": "ept",
+    "tags": ["infrastructure", "sport", "sports", "fitness", "gym", "salle", "tennis", "basket", "football", "foot", "terrain", "court", "field"],
+    "text_en": "EPT offers a complete sports infrastructure including football, basketball and tennis courts as well as a fitness room.",
+    "text_fr": "L'EPT propose une infrastructure sportive complete avec des terrains de football, de basket et de tennis, ainsi qu'une salle de fitness."
+  },
+  {
+    "id": "ept_infrastructure_study",
+    "topic": "ept",
+    "tags": ["library", "bibliotheque", "coworking", "study", "etude", "work", "travail", "infrastructure", "books", "livres", "calme"],
+    "text_en": "Students can use a coworking space and a library to study, read, and work on group projects.",
+    "text_fr": "Les etudiants disposent d'un espace de coworking et d'une bibliotheque pour etudier, lire et travailler en groupe sur des projets."
+  },
+  {
+    "id": "ept_infrastructure_living",
+    "topic": "ept",
+    "tags": ["foyer", "restaurant", "dormitory", "logement", "residence", "manger", "eating", "cantine", "cafeteria", "logement", "infrastructure"],
+    "text_en": "Residential infrastructure includes a student dormitory called foyer and a university restaurant where students can eat on campus.",
+    "text_fr": "L'infrastructure residentielle comprend un foyer pour le logement etudiant et un restaurant universitaire ou les etudiants peuvent manger sur le campus."
+  },
+  {
+    "id": "ept_study_trips",
+    "topic": "ept",
+    "tags": ["trips", "voyages", "travel", "international", "local", "study", "etude", "cultural", "culturel", "voyage"],
+    "text_en": "The school organizes local and international study trips to broaden the cultural and academic horizons of its students.",
+    "text_fr": "L'ecole organise des voyages d'etudes locaux et internationaux pour elargir les horizons culturels et academiques de ses etudiants."
+  },
+
+  {
+    "id": "parking_overview",
+    "topic": "parking",
+    "tags": ["parking", "voiture", "car", "stationner", "park", "first", "premier", "waypoint", "point"],
+    "text_en": "The parking area is the first waypoint on the campus tour.",
+    "text_fr": "Le parking est le premier point d'interet du parcours sur le campus."
+  },
+  {
+    "id": "parking_access",
+    "topic": "parking",
+    "tags": ["access", "acces", "qui", "who", "students", "etudiants", "professors", "professeurs", "admin", "staff", "personnel"],
+    "text_en": "The parking is open to students, professors and administrative staff.",
+    "text_fr": "Le parking est accessible aux etudiants, aux professeurs et au personnel administratif."
+  },
+  {
+    "id": "parking_hours",
+    "topic": "parking",
+    "tags": ["hours", "horaires", "heure", "open", "ouvert", "schedule", "time", "when", "quand"],
+    "text_en": "The parking is open every day from six in the morning to eleven in the evening.",
+    "text_fr": "Le parking est ouvert tous les jours de six heures du matin a vingt-trois heures."
+  },
+
+  {
+    "id": "reception_overview",
+    "topic": "reception",
+    "tags": ["reception", "accueil", "entrance", "entree", "second", "deuxieme", "waypoint", "point"],
+    "text_en": "The reception is the second waypoint of the campus tour and the main administrative hub.",
+    "text_fr": "La reception est le deuxieme point d'interet du parcours et le centre administratif principal."
+  },
+  {
+    "id": "reception_services",
+    "topic": "reception",
+    "tags": ["services", "scolarite", "registrar", "directors", "directeurs", "secretary", "secretariat", "admin", "bureau", "office"],
+    "text_en": "The reception hosts the registrar's office, the director offices, the secretariat and the main administrative services.",
+    "text_fr": "La reception abrite la scolarite, les bureaux des directeurs, le secretariat et les principaux services administratifs."
+  },
+  {
+    "id": "reception_purpose",
+    "topic": "reception",
+    "tags": ["help", "info", "questions", "visiteurs", "visitors", "students", "etudiants", "documents", "papiers"],
+    "text_en": "Students and visitors come here for administrative documents, questions about courses, and to meet the school directors.",
+    "text_fr": "Les etudiants et les visiteurs s'y rendent pour les documents administratifs, les questions sur les cours et pour rencontrer les directeurs de l'ecole."
+  },
+
+  {
+    "id": "stadium_overview",
+    "topic": "stade",
+    "tags": ["stadium", "stade", "football", "foot", "third", "troisieme", "waypoint", "point", "sport"],
+    "text_en": "The football stadium is the third waypoint of the campus tour, located in the sports area of EPT.",
+    "text_fr": "Le stade de football est le troisieme point d'interet du parcours, situe dans la zone sportive de l'EPT."
+  },
+  {
+    "id": "stadium_layout",
+    "topic": "stade",
+    "tags": ["layout", "size", "field", "terrain", "goal", "but", "classic", "classique"],
+    "text_en": "It is a classic football field with two goals at each end.",
+    "text_fr": "C'est un terrain de football classique avec deux buts a chaque extremite."
+  },
+  {
+    "id": "stadium_nearby",
+    "topic": "stade",
+    "tags": ["nearby", "near", "next", "pres", "cote", "basketball", "basket", "tennis", "courts", "terrain"],
+    "text_en": "The stadium sits next to the basketball court and the tennis courts, forming the main sports complex of the school.",
+    "text_fr": "Le stade est situe a cote du terrain de basket et des terrains de tennis, formant le principal complexe sportif de l'ecole."
+  },
+  {
+    "id": "stadium_use",
+    "topic": "stade",
+    "tags": ["use", "usage", "students", "etudiants", "matches", "matchs", "training", "entrainement", "competition"],
+    "text_en": "It is used by students for training, intramural matches, and inter-school competitions.",
+    "text_fr": "Il est utilise par les etudiants pour les entrainements, les matchs internes et les competitions inter-ecoles."
+  }
+]

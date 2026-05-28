@@ -5,7 +5,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:vibration/vibration.dart';
 
 import '../map_screen.dart';
-import '../services/database_helper.dart';
+import '../services/locale_service.dart';
+import '../services/rag_service.dart';
 import '../services/stt_service.dart';
 import '../services/tts_service.dart';
 import '../services/websocket_service.dart';
@@ -19,12 +20,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with TickerProviderStateMixin {
-  final DatabaseHelper _databaseHelper = DatabaseHelper.instance;
   final TtsService _ttsService = TtsService();
   final SttService _sttService = SttService();
   final WebSocketService _webSocketService = WebSocketService();
+  final LocaleService _locale = LocaleService.instance;
+  final RagService _rag = RagService.instance;
 
-  StreamSubscription<String>? _webSocketSub;
   StreamSubscription<ObstacleWarning>? _obstacleSub;
   StreamSubscription<String>? _sttResultSub;
   StreamSubscription<String>? _sttPartialSub;
@@ -37,8 +38,8 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isOpeningMap = false;
   bool _sttReady = false;
   bool _canVibrate = false;
-  String _status = 'Initializing offline services...';
-  String _lastTrigger = '-';
+  bool _isSwitchingLanguage = false;
+  String _status = '';
   String _lastHeard = '-';
 
   @override
@@ -50,39 +51,31 @@ class _HomeScreenState extends State<HomeScreen>
     )..repeat(reverse: true);
     _micActiveNotifier = ValueNotifier<bool>(false);
     _micActiveNotifier.addListener(_onMicNotifierChanged);
+    _locale.notifier.addListener(_onLocaleChanged);
+    _status = _locale.t('app.initializing');
     _bootstrap();
+  }
+
+  void _onLocaleChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _bootstrap() async {
     try {
-      await _databaseHelper.initialize();
-      await _ttsService.init();
+      await _rag.initialize();
+      await _ttsService.init(initialLanguage: _locale.ttsTag);
 
       _canVibrate = await Vibration.hasVibrator();
 
       final micReady = await _ensureMicrophonePermission();
       if (!micReady) {
-        _setStatus('Microphone permission is required for speech recognition.');
-        await _speakSafely('Please allow microphone permission and try again.');
+        _setStatus(_locale.t('mic.permission_required'));
+        await _speakSafely(_locale.t('mic.allow_request'));
         return;
       }
 
-      await _sttService.initialize(
-        modelAssetPath: 'assets/models/vosk-model-small-en-us-0.15.zip',
-        sampleRate: 16000,
-      );
-      _sttReady = true;
-
-      await _webSocketService.connect();
-
-      _webSocketSub = _webSocketService.triggerStream.listen((triggerId) async {
-        await _handleTriggerId(triggerId, source: 'Raspberry Pi');
-      });
-
-      _obstacleSub = _webSocketService.obstacleWarningStream.listen((warning) async {
-        await _handleObstacleWarning(warning);
-      });
-
+      // Subscribe to STT streams first so they exist before the engine
+      // emits any partial/final text.
       _sttResultSub = _sttService.resultStream.listen((recognizedText) async {
         await _handleVoiceCommand(recognizedText);
       });
@@ -90,13 +83,57 @@ class _HomeScreenState extends State<HomeScreen>
       _sttPartialSub = _sttService.partialStream.listen((partialText) {
         final normalized = partialText.trim();
         if (normalized.isEmpty) return;
-        _setStatus('Heard: $normalized');
+        _setStatus('${_locale.t('label.last_heard')}: $normalized');
       });
 
-      await _speakSafely('Dourbiya is ready in offline mode.');
-      _setStatus('Ready. Tap anywhere to listen for voice command.');
+      _setStatus('Loading speech model...');
+      await _loadSttForCurrentLocale(speakOnSuccess: false);
+
+      // WebSocket connect is fire-and-forget: the Pi may be off, and the
+      // 3-second handshake timeout must not delay the mic becoming usable.
+      unawaited(_connectWebSocketInBackground());
+
+      await _speakSafely(_locale.t('app.ready'));
+      _setStatus(_locale.t('app.tap_to_listen'));
     } catch (error) {
       _setStatus('Initialization failed: $error');
+    }
+  }
+
+  Future<void> _connectWebSocketInBackground() async {
+    try {
+      await _webSocketService.connect();
+    } catch (_) {
+      // Pi unreachable -- stay in standalone mode.
+    }
+    if (!mounted) return;
+
+    _obstacleSub = _webSocketService.obstacleWarningStream.listen((warning) async {
+      await _handleObstacleWarning(warning);
+    });
+  }
+
+  /// (Re)load the Vosk model that matches the current language. Returns true
+  /// if STT is ready after the call.
+  Future<bool> _loadSttForCurrentLocale({bool speakOnSuccess = true}) async {
+    final assetPath = _locale.voskAssetPath;
+    try {
+      if (_sttReady) {
+        final ok = await _sttService.switchModel(assetPath);
+        _sttReady = ok;
+      } else {
+        await _sttService.initialize(modelAssetPath: assetPath);
+        _sttReady = true;
+      }
+      if (_sttReady && speakOnSuccess) {
+        await _speakSafely(_locale.t('lang.switched'));
+      }
+      return _sttReady;
+    } catch (error) {
+      _sttReady = false;
+      _setStatus('Speech model load failed: $error');
+      await _speakSafely(_locale.t('lang.stt_unavailable'));
+      return false;
     }
   }
 
@@ -129,27 +166,16 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  Future<void> _handleTriggerId(String triggerId, {required String source}) async {
-    final message = await _databaseHelper.getMessageByTriggerId(triggerId);
-
-    if (message == null) {
-      _setStatus('Unknown trigger from $source: $triggerId');
-      await _speakSafely('Unknown location or obstacle trigger.');
-      return;
-    }
-
-    _lastTrigger = triggerId;
-    _setStatus('Trigger from $source: $triggerId');
-    await _haptic(const [0, 80, 60, 80]);
-    await _speakSafely(message);
-  }
-
   Future<void> _handleObstacleWarning(ObstacleWarning warning) async {
-    final directionPhrase = _directionPhrase(warning.direction);
-    final distanceText = warning.distanceM.toStringAsFixed(1);
-    final lead = warning.severity == 'high' ? 'Warning' : 'Caution';
-    final sentence = '$lead, obstacle $directionPhrase, $distanceText meters.';
-    _setStatus('Obstacle ${warning.severity}: ${warning.direction} ${distanceText}m');
+    final sentence = _locale.obstacleSentence(
+      warning.direction,
+      warning.distanceM,
+      warning.severity,
+    );
+    _setStatus(
+      'Obstacle ${warning.severity}: ${warning.direction} '
+      '${warning.distanceM.toStringAsFixed(1)}m',
+    );
     if (warning.severity == 'high') {
       await _haptic(const [0, 100, 80, 100, 80, 100]);
     } else {
@@ -158,80 +184,58 @@ class _HomeScreenState extends State<HomeScreen>
     await _speakSafely(sentence);
   }
 
-  String _directionPhrase(String direction) {
-    switch (direction) {
-      case 'left':
-        return 'on your left';
-      case 'right':
-        return 'on your right';
-      case 'ahead':
-      default:
-        return 'ahead';
-    }
-  }
-
   Future<void> _handleVoiceCommand(String recognizedText) async {
     final normalizedCommand = recognizedText.toLowerCase().trim();
     if (normalizedCommand.isEmpty) return;
 
     _lastHeard = normalizedCommand;
-    _setStatus('Recognized: $normalizedCommand');
+    _setStatus('${_locale.t('label.last_heard')}: $normalizedCommand');
 
     if (await _handleBasicVoiceCommand(normalizedCommand)) {
       return;
     }
 
-    final triggerId = _mapVoiceCommandToTrigger(normalizedCommand);
-    if (triggerId == null) {
-      _setStatus('Voice command not mapped: $normalizedCommand');
-      await _speakSafely('Command not recognized.');
+    // Fallback: try the RAG knowledge base for free-form questions.
+    final ragAnswer = _rag.generateAnswer(normalizedCommand, _locale.current);
+    if (ragAnswer != null) {
+      _setStatus('RAG: ${normalizedCommand.length > 40 ? "${normalizedCommand.substring(0, 40)}..." : normalizedCommand}');
+      await _speakSafely(ragAnswer);
       return;
     }
 
-    await _handleTriggerId(triggerId, source: 'Voice command');
+    // Nothing matched confidently -- be honest about it.
+    _setStatus(_locale.t('cmd.no_info'));
+    await _speakSafely(_locale.t('cmd.no_info'));
   }
 
   Future<bool> _handleBasicVoiceCommand(String command) async {
-    if (command.contains('stop listening') ||
-        command.contains('mic off') ||
-        command.contains('turn off mic') ||
-        command.contains('turn off the mic') ||
-        command.contains('be quiet') ||
-        command.contains('silence') ||
-        command.contains('tais toi') ||
-        command.contains('tais-toi') ||
-        command.contains('arrete') ||
-        command.contains('arrête') ||
-        command == 'stop') {
+    // ── Language switching (recognised in any of the 3 languages) ──
+    if (_isLanguageSwitchCommand(command)) {
+      await _cycleLanguage();
+      return true;
+    }
+
+    // ── Stop mic ──
+    if (_matchesAny(command, _stopMicKeywords)) {
       if (_isListening) {
         await _sttService.stopListening();
         _setListening(false);
-        _setStatus('Microphone off.');
-        await _ttsService.speak('Microphone off.');
+        _setStatus(_locale.t('mic.off'));
+        await _ttsService.speak(_locale.t('mic.off'));
       }
       return true;
     }
 
-    if ((command.contains('ouvre gps') ||
-            command.contains('ouvre google maps') ||
-            command.contains('ouvre la carte') ||
-            command.contains('ouvre carte') ||
-            command.contains('open map') ||
-            command.contains('open the map') ||
-            command.contains('open gps') ||
-            command.contains('open navigation') ||
-            command.contains('show map') ||
-            command == 'map' ||
-            command == 'gps') &&
-        !_isOpeningMap) {
+    // ── Open map ──
+    if (_matchesAny(command, _openMapKeywords) && !_isOpeningMap) {
       _isOpeningMap = true;
       try {
-        _setStatus('Opening map...');
+        _setStatus(_locale.t('map.opening'));
         if (_isListening) {
           await _sttService.stopListening();
           _setListening(false);
         }
-        await _speakSafely('Ouverture de la carte');
+        await _speakSafely(_locale.t('map.opening'));
         if (!mounted) return true;
         await Navigator.push(
           context,
@@ -250,89 +254,123 @@ class _HomeScreenState extends State<HomeScreen>
       return true;
     }
 
-    if (command.contains('hello') || command.contains('hi')) {
-      _setStatus('Greeting received.');
-      await _speakSafely('Hello. I am Dourbiya.');
+    // ── Greeting ──
+    if (_matchesAny(command, _greetingKeywords)) {
+      await _speakSafely(_locale.t('cmd.greeting'));
       return true;
     }
 
-    if (command.contains('where am i') || command.contains('where am i now')) {
-      if (_lastTrigger == '-') {
-        _setStatus('Current location is unknown.');
-        await _speakSafely('I do not know your location yet. Say library, cafeteria, or dorm to test guidance.');
-      } else {
-        final message = await _databaseHelper.getMessageByTriggerId(_lastTrigger);
-        final spoken = message ?? 'Your last known trigger is $_lastTrigger.';
-        _setStatus('Reporting current location.');
-        await _speakSafely(spoken);
-      }
-      return true;
-    }
-
-    if (command.contains('help') || command.contains('what can i say')) {
-      _setStatus('Reporting available commands.');
-      await _speakSafely(
-        'You can say library, cafeteria, dorm, stairs, door, map, where am I, hello, or repeat.',
-      );
-      return true;
-    }
-
-    if (command.contains('repeat') || command.contains('say again')) {
-      if (_lastTrigger == '-') {
-        _setStatus('No previous guidance to repeat.');
-        await _speakSafely('There is no previous guidance to repeat.');
-      } else {
-        final message = await _databaseHelper.getMessageByTriggerId(_lastTrigger);
-        final spoken = message ?? 'Last known trigger is $_lastTrigger.';
-        _setStatus('Repeating last guidance.');
-        await _speakSafely(spoken);
-      }
+    // ── Help ──
+    if (_matchesAny(command, _helpKeywords)) {
+      await _speakSafely(_locale.t('cmd.help_list'));
       return true;
     }
 
     return false;
   }
 
-  String? _mapVoiceCommandToTrigger(String command) {
-    if (command.contains('library')) return 'uni_library';
-    if (command.contains('cafeteria') || command.contains('cafe')) return 'uni_cafeteria';
-    if (command.contains('dorm') || command.contains('room')) return 'dorm_room_101';
-    if (command.contains('stairs')) return 'stairs_down';
-    if (command.contains('door')) return 'door_closed';
-    return null;
+  // ────────────────────────────────────────────────────────────────────
+  // Voice-command keyword tables (trilingual)
+  // ────────────────────────────────────────────────────────────────────
+
+  static const _stopMicKeywords = [
+    // English
+    'stop listening', 'mic off', 'turn off mic', 'turn off the mic',
+    'be quiet', 'silence', 'stop',
+    // French
+    'tais toi', 'tais-toi', 'arrete', 'arrête',
+    'coupe le micro', 'eteins le micro',
+  ];
+
+  static const _openMapKeywords = [
+    'ouvre gps', 'ouvre google maps', 'ouvre la carte', 'ouvre carte',
+    'open map', 'open the map', 'open gps', 'open navigation',
+    'show map', 'map', 'gps',
+    'carte', 'la carte',
+  ];
+
+  static const _greetingKeywords = [
+    'hello', 'hi',
+    'bonjour', 'salut',
+  ];
+
+  static const _helpKeywords = [
+    'help', 'what can i say',
+    'aide', 'aidez moi', 'que puis je dire',
+  ];
+
+  static const _languageSwitchKeywords = [
+    'change language', 'switch language', 'language',
+    'francais', 'français', 'english',
+    'changer langue', 'changer de langue', 'parler francais', 'parler anglais',
+    'langue',
+  ];
+
+  bool _isLanguageSwitchCommand(String command) =>
+      _matchesAny(command, _languageSwitchKeywords);
+
+  bool _matchesAny(String command, List<String> keywords) {
+    for (final kw in keywords) {
+      if (command == kw || command.contains(kw)) return true;
+    }
+    return false;
   }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Language switching
+  // ────────────────────────────────────────────────────────────────────
+
+  Future<void> _cycleLanguage() async {
+    if (_isSwitchingLanguage) return;
+    _isSwitchingLanguage = true;
+    try {
+      final wasListening = _isListening;
+      if (wasListening) {
+        await _sttService.stopListening();
+        _setListening(false);
+      }
+      _locale.cycleNext();
+      await _ttsService.setLanguage(_locale.ttsTag);
+      await _loadSttForCurrentLocale();
+      if (wasListening && _sttReady) {
+        await _sttService.startListening();
+        _setListening(true);
+      }
+      _setStatus(_locale.t('app.tap_to_listen'));
+    } finally {
+      _isSwitchingLanguage = false;
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────
 
   Future<void> _toggleListening() async {
     await _haptic(const [0, 30]);
     if (!_sttReady) {
       final micReady = await _ensureMicrophonePermission();
       if (!micReady) {
-        _setStatus('Microphone permission denied. Please enable it in settings.');
+        _setStatus(_locale.t('mic.permission_required'));
         return;
       }
-
-      try {
-        await _sttService.initialize(
-          modelAssetPath: 'assets/models/vosk-model-small-en-us-0.15.zip',
-          sampleRate: 16000,
-        );
-        _sttReady = true;
-      } catch (error) {
-        _setStatus('Speech service not ready: $error');
-        return;
-      }
+      final ok = await _loadSttForCurrentLocale(speakOnSuccess: false);
+      if (!ok) return;
     }
 
     if (_isListening) {
       await _sttService.stopListening();
       _setListening(false);
-      _setStatus('Microphone stopped.');
-      await _ttsService.speak('Microphone stopped.');
+      _setStatus(_locale.t('mic.stopped'));
+      await _ttsService.speak(_locale.t('mic.stopped'));
     } else {
       await _ttsService.stop();
-      await _sttService.startListening();
-      _setListening(true);
-      _setStatus('Listening for offline command... Speak now.');
+      try {
+        await _sttService.startListening();
+        _setListening(true);
+        _setStatus(_locale.t('mic.listening'));
+      } catch (error) {
+        _setListening(false);
+        _setStatus('Speech engine busy. Try again in a moment.');
+      }
     }
   }
 
@@ -342,8 +380,8 @@ class _HomeScreenState extends State<HomeScreen>
       await _sttService.stopListening();
       _setListening(false);
     }
-    _setStatus('Opening map...');
-    await _speakSafely('Ouverture de la carte');
+    _setStatus(_locale.t('map.opening'));
+    await _speakSafely(_locale.t('map.opening'));
     if (!mounted) return;
     await Navigator.push(
       context,
@@ -383,7 +421,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
-    _webSocketSub?.cancel();
     _obstacleSub?.cancel();
     _sttResultSub?.cancel();
     _sttPartialSub?.cancel();
@@ -391,6 +428,7 @@ class _HomeScreenState extends State<HomeScreen>
     _pulseController.dispose();
     _micActiveNotifier.removeListener(_onMicNotifierChanged);
     _micActiveNotifier.dispose();
+    _locale.notifier.removeListener(_onLocaleChanged);
 
     _webSocketService.dispose();
     _sttService.dispose();
@@ -411,9 +449,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   String get _micStateLabel {
-    if (_isSpeaking) return 'SPEAKING';
-    if (_isListening) return 'LISTENING';
-    return 'TAP TO LISTEN';
+    if (_isSpeaking) return _locale.t('mic.label_speaking');
+    if (_isListening) return _locale.t('mic.label_listening');
+    return _locale.t('mic.label_tap');
   }
 
   @override
@@ -421,80 +459,105 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
-        onTap: _toggleListening,
-        behavior: HitTestBehavior.opaque,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const _Header(),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: Center(
-                    child: _MicPulse(
-                      controller: _pulseController,
-                      showRings: _isListening || _isSpeaking,
-                      ringColor: _isSpeaking ? Colors.greenAccent : Colors.yellow,
-                      fillColor: _micFillColor,
-                      iconColor: _micIconColor,
-                      label: _micStateLabel,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _StatusPill(text: _status),
-                const SizedBox(height: 12),
-                _InfoChip(label: 'Last trigger', value: _lastTrigger),
-                const SizedBox(height: 6),
-                _InfoChip(label: 'Last heard', value: _lastHeard),
-                const SizedBox(height: 16),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: _openMapFromButton,
-                    icon: const Icon(Icons.map, size: 26),
-                    label: const Text('OPEN MAP'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.yellow,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size(220, 60),
-                      textStyle: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
+          onTap: _toggleListening,
+          behavior: HitTestBehavior.opaque,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Header(tagline: _locale.t('tagline')),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Center(
+                      child: _MicPulse(
+                        controller: _pulseController,
+                        showRings: _isListening || _isSpeaking,
+                        ringColor: _isSpeaking ? Colors.greenAccent : Colors.yellow,
+                        fillColor: _micFillColor,
+                        iconColor: _micIconColor,
+                        label: _micStateLabel,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-              ],
+                  const SizedBox(height: 8),
+                  _StatusPill(text: _status),
+                  const SizedBox(height: 8),
+                  _InfoChip(label: _locale.t('label.last_heard'), value: _lastHeard),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _openMapFromButton,
+                          icon: const Icon(Icons.map, size: 22),
+                          label: Text(_locale.t('btn.open_map')),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.yellow,
+                            foregroundColor: Colors.black,
+                            minimumSize: const Size.fromHeight(52),
+                            textStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _cycleLanguage,
+                          icon: const Icon(Icons.translate, size: 22),
+                          label: Text(_locale.languageDisplayName(_locale.current)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            minimumSize: const Size.fromHeight(52),
+                            textStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  const _Header({required this.tagline});
+  final String tagline;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        Image(
+        const Image(
           image: AssetImage('assets/images/ept_logo.gif'),
           height: 48,
           fit: BoxFit.contain,
           gaplessPlayback: true,
         ),
-        SizedBox(height: 6),
-        Text(
+        const SizedBox(height: 6),
+        const Text(
           'DOURBIYA',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -504,11 +567,11 @@ class _Header extends StatelessWidget {
             letterSpacing: 4.0,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'Offline Accessibility',
+          tagline,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white70,
             fontSize: 16,
             letterSpacing: 1.5,
@@ -616,7 +679,9 @@ class _StatusPill extends StatelessWidget {
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 18),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
       ),
     );

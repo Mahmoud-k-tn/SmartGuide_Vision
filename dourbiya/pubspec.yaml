@@ -15,8 +15,6 @@ dependencies:
   flutter_compass: ^0.8.0
   vibration: ^2.0.0
   latlong2: ^0.9.0
-  sqflite: ^2.4.1
-  path: ^1.9.0
   flutter_tts: ^4.2.2
   vosk_flutter: ^0.3.48
   web_socket_channel: ^3.0.1
@@ -37,6 +35,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/models/vosk-model-small-en-us-0.15.zip
+    - assets/models/vosk-model-small-fr-0.22.zip
+    - assets/rag/knowledge.json
     - assets/circuit.geojson
     - assets/landmarks.geojson
     - assets/images/ept_logo.gif

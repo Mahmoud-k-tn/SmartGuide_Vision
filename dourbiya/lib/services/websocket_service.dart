@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -29,17 +30,29 @@ class WebSocketService {
   Stream<ObstacleWarning> get obstacleWarningStream => _obstacleController.stream;
 
   Future<void> connect() async {
-    _channel = WebSocketChannel.connect(Uri.parse(_url));
+    try {
+      _channel = WebSocketChannel.connect(Uri.parse(_url));
+      await _channel!.ready.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          throw const SocketException('WebSocket handshake timed out');
+        },
+      );
 
-    _subscription = _channel!.stream.listen(
-      _onMessage,
-      onError: (error) {
-        // Keep app alive even when socket drops.
-      },
-      onDone: () {
-        // Reconnect strategy can be added later.
-      },
-    );
+      _subscription = _channel!.stream.listen(
+        _onMessage,
+        onError: (error) {
+          // Keep app alive even when socket drops.
+        },
+        onDone: () {
+          // Reconnect strategy can be added later.
+        },
+        cancelOnError: false,
+      );
+    } catch (_) {
+      // Pi not reachable -- app stays usable in standalone mode.
+      _channel = null;
+    }
   }
 
   void _onMessage(dynamic rawMessage) {

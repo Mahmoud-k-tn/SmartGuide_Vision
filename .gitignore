@@ -9,7 +9,7 @@
 .history
 .svn/
 .vscode/
-
+/report/
 # IntelliJ related
 *.iml
 *.ipr

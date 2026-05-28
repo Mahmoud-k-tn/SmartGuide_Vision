@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 // resolves Flutter's Size.fromHeight.
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' hide Size;
 import 'map/navigation/navigation_manager.dart';
+import 'services/locale_service.dart';
 import 'services/stt_service.dart';
 import 'services/tts_service.dart';
 
@@ -28,6 +29,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final NavigationManager _nav = NavigationManager();
+  final LocaleService _locale = LocaleService.instance;
 
   bool   _started     = false;
   bool   _piConnected = false;
@@ -71,11 +73,11 @@ class _MapScreenState extends State<MapScreen> {
       if (newState) {
         await widget.sttService.startListening();
         widget.micActiveNotifier.value = true;
-        await widget.ttsService.speak('Microphone on.');
+        await widget.ttsService.speak(_locale.t('mic.listening'));
       } else {
         await widget.sttService.stopListening();
         widget.micActiveNotifier.value = false;
-        await widget.ttsService.speak('Microphone off.');
+        await widget.ttsService.speak(_locale.t('mic.off'));
       }
     } finally {
       _micBusy = false;
@@ -114,9 +116,7 @@ class _MapScreenState extends State<MapScreen> {
     if (_mapboxMap != null) await _drawAll(_mapboxMap!);
 
     if (mounted) {
-      await widget.ttsService.speak(
-        'Voice commands are off. Tap the microphone button at the top to enable them.',
-      );
+      await widget.ttsService.speak(_locale.t('map.opening'));
     }
   }
 
